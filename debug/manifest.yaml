@@ -1,0 +1,64 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: debug
+  namespace: expense
+spec:
+  # one pod can contain multiple containers
+  containers:
+  - name: debug
+    image: dath1/debug:1.0.0
+
+
+# backend Deployment fails because of backend(pod/container) failing to connect DB because of DNS problem
+
+# DNS works on port number 53. EKS DNS resoultion happens on udp 53.
+
+# connect to worker node from bastion
+# copy key to Bastion
+# vim eks.pem
+
+# ssh -i eks.pem ec2-user@<workernodeIP>
+# sudo dnf install bind-utils -y
+# nslookup mysql-dev.raj82s.online	
+
+# It(DB access) works fine from node but failing to connect from Pod/container
+
+# To debug the issue from pod create debug pod since there is no root access in main Pod
+
+# 28-k8-blue-green
+# cd debug
+# docker build -t dath1/debug:1.0.0 .
+# docker login
+# docker push dath1/debug:1.0.0
+
+# kubectl apply -f manifest.yaml
+
+# k9s
+# Enter shell mode from k9s with debug pod
+
+# # Try this command and it fails from pod to connect to DB
+# nslookup mysql-dev.raj82s.online
+# # telent also fails
+# telnet mysql-dev.raj82s.online 3306
+# # mysql command also fails
+# mysql -h mysql-dev.raj82s.online -u root -pExpenseApp1
+
+#  This failed becuase of DNS problem(TCP VS UDP)
+
+# To fix this add the   protocol= "-1" instead of tcp
+
+
+# From Pod(node) to pod(node) access,DB to pod access
+# resource "aws_security_group_rule" "node_vpc" {
+#   type              = "ingress"
+#   from_port         = 0
+#   to_port           = 0
+#   protocol          = "-1" #this is huge mistake, if value is tcp, DNS will work in EKS. UDP traffic is required. So make it All traffic
+#   cidr_blocks = ["10.0.0.0/16"] # our private IP address range
+#   security_group_id = module.eks_node_sg.sg_id
+# }
+
+# EKS resolves DNS on UDP port 53  so if protocol="tcp" is cofigured Pod in
+# EKS cannot connect to DB so configure protocol= "-1" to allow all protocols
+
