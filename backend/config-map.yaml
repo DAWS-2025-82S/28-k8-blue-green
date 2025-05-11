@@ -24,7 +24,7 @@ data:
 # use transactions;
 # show tables;
 
-# mysql -h mysql-dev.raj82s.online -u expense -pExpenseApp1
+#  mysql -h mysql-dev.raj82s.online -u expense -pExpenseApp@1
 
 # kubectl create namespace expense
 # kubectl apply -f config-map.yaml
