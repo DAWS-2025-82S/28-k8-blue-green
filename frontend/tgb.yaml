@@ -2,8 +2,47 @@ apiVersion: elbv2.k8s.aws/v1beta1
 kind: TargetGroupBinding
 metadata:
   name: frontend
+  namespace: expense
 spec:
   serviceRef:
     name: frontend # route traffic to the awesome-service
     port: 80
   targetGroupARN: arn:aws:elasticloadbalancing:us-east-1:311141550186:targetgroup/expense-dev/59eecf300e841d34
+
+# use either ingress.yaml or tgb.yaml to Create LB
+
+# Using k9s delete ingress created using ingress.yaml to use this approach
+
+# 27-terraform-aws-eks
+# ---------------------
+# 00-vpc
+# 10-sg
+# 20-bastion
+# 40-eks
+# 30-rds
+
+# Delete the certificate in aws and we will create certificate using terraform
+# 50-acm
+# 2 ways to expose the frontend
+# ------------------------------
+# 1. Create ingress resource that creates ALB, Listener, Rule and Target group
+# 2. We create ALB, Listener, Rule, TG through terraform. EKS adds the pods to the TG
+
+# Create LB
+# 	Create LB using ingress i.e., without terrafrom or
+# 	Create LB using terraform 60-ingress-alb
+
+# Don't run ingress.yaml if you are using 60-ingress-alb to creat Load Balancer
+
+# 60-ingress-alb
+
+# cd ../frontend
+# kubectl apply -f configmap.yaml
+# kubectl apply -f deployment.yaml
+# kubectl apply -f service.yaml
+
+# Copy and update the target group arn from AWS in tgb.yaml
+
+# kubectl apply -f ingress.yaml
+
+# https://expense-dev.raj82s.online/

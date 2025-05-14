@@ -1,0 +1,88 @@
+Steps to create and test Production Grade EKS cluster infra  using terraform
+-----------------------------------------------------------------------------
+Create EKS infra using terraform from local machine
+
+27-terraform-aws-eks
+---------------------
+00-vpc
+10-sg
+20-bastion
+40-eks
+30-rds
+Test BlueGreen Deployment
+Delete the certificate in aws and we will create certificate using terraform
+50-acm
+Create LB
+	Create LB using ingress i.e., without terrafrom or
+	Create LB using terraform 60-ingress-alb
+60-ingress-alb
+
+Create EKS infra
+----------------
+cd 27-terraform-aws-eks
+for i in $(ls -d *);do cd $i;terraform apply -auto-approve;cd ..;done
+
+Destroy EKS infra
+------------------
+cd 27-terraform-aws-eks
+for i in $(ls -dr *);do cd $i;terraform destroy -auto-approve;cd ..;done
+
+Connect to bastion
+-------------------
+aws configure  -- for bastion to connect to eks
+	
+aws eks update-kubeconfig --region <region> --name <ClusterName>
+
+aws eks update-kubeconfig --region us-east-1 --name expense-dev
+	
+kubectl get nodes
+
+setup DB from Bastion
+--------------------- 
+RDS is created,but we need to create schema, tables, user, etc...
+
+sudo dnf install mysql -y
+mysql -h mysql-dev.raj82s.online -u root -pExpenseApp1
+
+mysql -h mysql-dev.raj82s.online -u root -pExpenseApp1 < backend.sql
+
+check the db
+-------------
+mysql -h mysql-dev.raj82s.online -u root -pExpenseApp1
+use transactions;
+show tables;
+
+check with expense user also:
+ mysql -h mysql-dev.raj82s.online -u expense -pExpenseApp@1
+
+Test the application
+--------------------
+git clone https://github.com/DAWS-2025-82S/28-k8-blue-green.git
+
+cd 28-k8-blue-green
+cd backend
+
+ kubectl create namespace expense
+ kubectl apply -f config-map.yaml
+ kubectl apply -f blue-deployment.yaml
+ kubectl apply -f main-service.yaml
+
+cd ../debug
+docker build -t dath1/debug:1.0.0 .
+docker login
+docker push dath1/debug:1.0.0
+
+kubectl apply -f manifest.yaml
+
+
+cd ../frontend
+kubectl apply -f configmap.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+
+Copy and update the target group arn from AWS in tgb.yaml
+
+kubectl apply -f ingress.yaml
+
+https://expense-dev.raj82s.online/
+

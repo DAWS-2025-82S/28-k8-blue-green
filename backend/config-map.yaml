@@ -7,6 +7,16 @@ data:
   DB_HOST: mysql-dev.raj82s.online
 
 
+# Create EKS infra using terraform
+# eks Architecture diagram
+
+# 27-terraform-aws-eks
+# ---------------------
+# 00-vpc
+# 10-sg
+# 20-bastion
+# 40-eks
+# 30-rds
 
 # setup DB from Bastion
 # --------------------- 

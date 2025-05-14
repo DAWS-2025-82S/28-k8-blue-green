@@ -22,3 +22,90 @@ spec:
             name: frontend
             port:
               number: 80
+
+# use either ingress.yaml or tgb.yaml to Create LB
+
+
+# 27-terraform-aws-eks
+# ---------------------
+# 00-vpc
+# 10-sg
+# 20-bastion
+# 40-eks
+# 30-rds
+
+# Delete the certificate in aws and we will create certificate using terraform
+# 50-acm
+# 2 ways to expose the frontend
+# ------------------------------
+# 1. Create ingress resource that creates ALB, Listener, Rule and Target group
+# 2. We create ALB, Listener, Rule, TG through terraform. EKS adds the pods to the TG
+
+# Create LB
+# 	Create LB using ingress ingress.yaml i.e., without terrafrom or
+# 	Create LB using terraform 60-ingress-alb
+
+# Don't run 60-ingress-alb if you are using ingress.yaml
+
+
+# follow steps same as in ReadMe of 25-k8-ingress repo  and below are required for tgb.yaml also
+
+# eksctl utils associate-iam-oidc-provider \
+#     --region us-east-1 \
+#     --cluster expense-dev \
+#     --approve
+	
+# curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.12.0/docs/install/iam_policy.json
+
+# aws iam create-policy \
+#     --policy-name AWSLoadBalancerControllerIAMPolicy \
+#     --policy-document file://iam-policy.json
+
+# eksctl create iamserviceaccount \
+# --cluster=expense-dev \
+# --namespace=kube-system \
+# --name=aws-load-balancer-controller \
+# --attach-policy-arn=arn:aws:iam::311141550186:policy/AWSLoadBalancerControllerIAMPolicy \
+# --override-existing-serviceaccounts \
+# --region us-east-1 \
+# --approve
+
+# helm repo add eks https://aws.github.io/eks-charts
+
+# helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=expense-dev --set serviceAccount.create=true --set serviceAccount.name=aws-load-balancer-controller
+
+#  kubectl get pods -n kube-system
+#  kubectl get deployments -n kube-system
+ 
+#  kubectl describe deployment aws-load-balancer-controller -n kube-system
+ 
+#  kubectl get rs -n kube-system
+ 
+#  kubectl describe rs <aws-load-balancer-controller-SOMID> -n kube-system
+ 
+# aws-load-balancer-controller pods failed to create and can be verified using above commands
+
+# To fix this set serviceAccount.create=true in helm command
+
+# helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=expense-dev --set serviceAccount.create=true --set serviceAccount.name=aws-load-balancer-controller
+ 
+# helm list -n kubesystem
+
+# helm uninstall aws-load-balancer-controller -n kube-system
+
+# verify in k9s pods in kube-system or using below command
+
+#  kubectl get pods -n kube-system
+
+
+ 
+# cd ../frontend
+# kubectl apply -f configmap.yaml
+# kubectl apply -f deployment.yaml
+# kubectl apply -f service.yaml
+# kubectl apply -f ingress.yaml
+
+# https://expense-dev.raj82s.online/
+
+# Delete ingress from k9s and the above approach is not recommended and 
+# use terrafrom approach for creating Load Balancer
